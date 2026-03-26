@@ -1,7 +1,13 @@
-name: Build okta-awscli Windows EXE
+name: Build and Release okta-awscli Windows EXE
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -20,16 +26,31 @@ jobs:
         run: |
           pip3 install okta-awscli pyinstaller
 
-      - name: Show install location
-        run: |
-          python -c "import oktaawscli; print(oktaawscli.__file__)"
-
       - name: Build executable
         run: |
-          pyinstaller --onefile --name okta-awscli C:\hostedtoolcache\windows\Python\3.14.3\x64\Lib\site-packages\oktaawscli\__init__.py
+          pyinstaller --onefile --name okta-awscli C:\hostedtoolcache\windows\Python\3.14.3\x64\Lib\site-packages\oktaawscli\okta_awscli.py
 
-      - name: Upload artifact
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: okta-awscli-windows
           path: dist/okta-awscli.exe
+
+      - name: Create or update GitHub Release and upload asset
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag `
+              "dist/okta-awscli.exe#okta-awscli-windows.exe" `
+              --title $tag `
+              --notes "Windows AMD64 build for okta-awscli"
+          } else {
+            gh release upload $tag `
+              "dist/okta-awscli.exe#okta-awscli-windows.exe" `
+              --clobber
+          }
