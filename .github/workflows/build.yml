@@ -24,12 +24,12 @@ jobs:
         run: |
           python -c "import oktaawscli; print(oktaawscli.__file__)"
 
-      # - name: Build executable
-      #   run: |
-      #     pyinstaller --onefile --name okta-awscli entry.py
+      - name: Build executable
+        run: |
+          pyinstaller --onefile --name okta-awscli C:\hostedtoolcache\windows\Python\3.14.3\x64\Lib\site-packages\oktaawscli\__init__.py
 
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: okta-awscli-windows
-      #     path: dist/okta-awscli.exe
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: okta-awscli-windows
+          path: dist/okta-awscli.exe
